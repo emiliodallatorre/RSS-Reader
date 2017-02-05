@@ -1,10 +1,9 @@
 <resources>
-    <string-array name="spinner">
-        <item>Divorziato/a</item>
-        <item>Separato/a</item>
-        <item>Coniugato/a</item>
-        <item>Celibe/Nubile</item>
-    </string-array>
     <string name="app_name">La Voce del Bruno Franchetti</string>
     <string name="Credits">App sviluppata e disegnata da Emilio Dalla Torre. Per problemi, riferirsi a emiliodallatorre12@live.com.</string>
+    <string-array name="spinner">
+        <item>Chi siamo</item>
+        <item>Valuta questa app</item>
+        <item>Contatta lo sviluppatore</item>
+    </string-array>
 </resources>

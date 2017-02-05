@@ -2,10 +2,17 @@ package com.LaVocedelBrunoFranchetti.rssreader;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -27,6 +34,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import static android.R.id.message;
 import static com.LaVocedelBrunoFranchetti.rssreader.R.layout.activity_main;
 
 public class MainActivity extends AppCompatActivity {
@@ -36,14 +44,40 @@ public class MainActivity extends AppCompatActivity {
     private List<Model> modelList;
     private ActionBar actionBar;
     private Context context;
+    private boolean haveNetworkConnection() {
+        boolean haveConnectedWifi = false;
+        boolean haveConnectedMobile = false;
+
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+                if (ni.isConnected())
+                    haveConnectedWifi = true;
+            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+                if (ni.isConnected())
+                    haveConnectedMobile = true;
+        }
+        return haveConnectedWifi || haveConnectedMobile;
+    }
 
     protected void onCreate(Bundle savedInstanceState) {
+
+
         super.onCreate(savedInstanceState);
+
         setContentView(activity_main);
 
         listView = (ListView) findViewById(R.id.listView);
 
-        new HaberServisiAsynTask().execute("http://istitutobrunofranchetti.gov.it/giornalino/feed/");
+        if (haveNetworkConnection()) {
+            new HaberServisiAsynTask().execute("http://istitutobrunofranchetti.gov.it/giornalino/feed/");
+        } else {
+            AlertDialog.Builder builder=new AlertDialog.Builder(this);
+            builder.setTitle("Attenzione!");
+            builder.setMessage("Il tuo telefono non risulta connesso ad internet, pertanto non è possibile stabilire una connessione con i server del nostro istituto. Controlla la tua connessione ad internet. Se non dovesse essere questo il problema, contatta lo sviluppatore a: emiliodallatorre12@live.com");
+            builder.show();
+        }
 
         actionBar = getSupportActionBar();
 
@@ -62,15 +96,16 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected List<Model> doInBackground(String... params) {
             modelList = new ArrayList<Model>();
-            HttpURLConnection baglanti = null;
+            HttpURLConnection connessione = null;
             try {
                 URL url = new URL(params[0]);
-                baglanti = (HttpURLConnection) url.openConnection();
-                int baglantiDurumu = baglanti.getResponseCode();
+                connessione = (HttpURLConnection) url.openConnection();
+                int baglantiDurumu = connessione.getResponseCode();
+                System.out.println(connessione);
 
                 if (baglantiDurumu == HttpURLConnection.HTTP_OK) {
 
-                    BufferedInputStream bufferedInputStream = new BufferedInputStream(baglanti.getInputStream());
+                    BufferedInputStream bufferedInputStream = new BufferedInputStream(connessione.getInputStream());
                     publishProgress("Caricamento in corso...");
                     DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
                     DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
@@ -118,8 +153,8 @@ public class MainActivity extends AppCompatActivity {
                         "Errore del server internet: il sito www.istitutobrunofranchetti.gov.it/giornalino non è momentaneamente raggiungibile.",
                         Toast.LENGTH_LONG).show();
             } finally {
-                if (baglanti != null)
-                    baglanti.disconnect();
+                if (connessione != null)
+                    connessione.disconnect();
             }
 
             return modelList;
@@ -130,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPreExecute() {
             super.onPreExecute();
             progressDialog = ProgressDialog.show(MainActivity.this,
-                    "Caricamento...", "Caricamento...", true);
+                    "Caricamento...", "Caricamento in corso...", true);
         }
 
         @Override

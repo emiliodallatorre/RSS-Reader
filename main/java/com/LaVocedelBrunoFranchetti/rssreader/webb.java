@@ -1,14 +1,14 @@
 package com.LaVocedelBrunoFranchetti.rssreader;
 
 import android.app.Activity;
-import android.content.Context;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.view.View;
-import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -31,11 +31,13 @@ import static com.LaVocedelBrunoFranchetti.rssreader.R.layout.activity_main;
 public class webb extends Activity {
 
     StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+    private ProgressDialog progressDialog;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(activity_main);
-
+        progressDialog = ProgressDialog.show(webb.this,
+                "Caricamento...", "Caricamento in corso...", true);
         final String link = getIntent().getStringExtra("link");
         final String title = getIntent().getStringExtra("title");
         final String creator = getIntent().getStringExtra("creator");
@@ -95,6 +97,18 @@ public class webb extends Activity {
                 startActivity(Intent.createChooser(sharingIntent, "Condividi tramite:"));
             }
         });
+        final Button email = (Button) findViewById(R.id.email);
+        email.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts(
+                        "mailto","giornalino@istitutobrunofranchetti.gov.it", null));
+                intent.putExtra(Intent.EXTRA_SUBJECT, "Proposta di articolo da *inserisci il tuo nome e classe*");
+                intent.putExtra(Intent.EXTRA_TEXT, "Salve, questa mail è stata generata dall'app del Giornalino d'Istituto, allego l'articolo che ho scritto / argomento che vorrei venisse trattato:");
+                startActivity(Intent.createChooser(intent, "Scegli come inviarlo:"));
+            }
+        });
+        progressDialog.dismiss();
     }
 }
 
