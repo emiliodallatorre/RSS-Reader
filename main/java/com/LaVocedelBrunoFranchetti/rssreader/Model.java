@@ -1,5 +1,7 @@
 package com.LaVocedelBrunoFranchetti.rssreader;
 
+import android.graphics.Bitmap;
+
 /**
  * @author Emilio Dalla Torre.
  */
@@ -10,6 +12,7 @@ public class Model {
     private String date;
     private String creator;
     private String link;
+    private Bitmap image;
 
     public String getTitle() {
         return title;
@@ -41,6 +44,13 @@ public class Model {
 
     public void setLink(String link) {
         this.link = link;
+    }
+
+    public Bitmap getImage() {
+        return image;
+    }
+    public void setImage(Bitmap image) {
+        this.image = image;
     }
     }
 

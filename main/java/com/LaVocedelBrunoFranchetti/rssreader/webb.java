@@ -1,14 +1,14 @@
 package com.LaVocedelBrunoFranchetti.rssreader;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import static com.LaVocedelBrunoFranchetti.rssreader.R.layout.activity_main;
-
 
 /**
  * @author Emilio Dalla Torre.
@@ -31,13 +29,11 @@ import static com.LaVocedelBrunoFranchetti.rssreader.R.layout.activity_main;
 public class webb extends Activity {
 
     StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-    private ProgressDialog progressDialog;
+    private Context context;
+    private WebView webView;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(activity_main);
-        progressDialog = ProgressDialog.show(webb.this,
-                "Caricamento...", "Caricamento in corso...", true);
         final String link = getIntent().getStringExtra("link");
         final String title = getIntent().getStringExtra("title");
         final String creator = getIntent().getStringExtra("creator");
@@ -64,10 +60,8 @@ public class webb extends Activity {
         URL url = null;
 
         try {
-            Element image = document.select("img.alignright, img.alignleft, img.aligncenter").first();
+            Element image = document.select("img.alignright, img.alignleft, img.aligncenter, .size-full").first();
             String imgurl = image.absUrl("src");
-
-
             try {
                 url = new URL(imgurl);
             } catch (MalformedURLException e) {
@@ -85,8 +79,19 @@ public class webb extends Activity {
             CharSequence text = "Questo articolo non contiene immagini o quelle presenti potrebbero non essere supportate da questa app. Per visualizzare completamente l'articolo, visita: ";
             Toast.makeText(this, text + link, Toast.LENGTH_LONG).show();
         }
-        final Button button = (Button) findViewById(R.id.share);
-        button.setOnClickListener(new View.OnClickListener() {
+        final Button view = (Button) findViewById(R.id.view);
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setContentView(R.layout.webview);
+                webView = (WebView) findViewById(R.id.view);
+                webView.getSettings().setJavaScriptEnabled(false);
+                webView.getSettings().setBuiltInZoomControls(true);
+                webView.loadUrl(link);
+            }
+        });
+        final Button share = (Button) findViewById(R.id.share);
+        share.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -97,18 +102,23 @@ public class webb extends Activity {
                 startActivity(Intent.createChooser(sharingIntent, "Condividi tramite:"));
             }
         });
-        final Button email = (Button) findViewById(R.id.email);
-        email.setOnClickListener(new View.OnClickListener() {
+        final Button send = (Button) findViewById(R.id.send);
+        send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts(
-                        "mailto","giornalino@istitutobrunofranchetti.gov.it", null));
-                intent.putExtra(Intent.EXTRA_SUBJECT, "Proposta di articolo da *inserisci il tuo nome e classe*");
-                intent.putExtra(Intent.EXTRA_TEXT, "Salve, questa mail è stata generata dall'app del Giornalino d'Istituto, allego l'articolo che ho scritto / argomento che vorrei venisse trattato:");
-                startActivity(Intent.createChooser(intent, "Scegli come inviarlo:"));
+                Intent i = new Intent(Intent.ACTION_SEND);
+                i.setType("message/rfc822");
+                i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"giornalino@istitutobrunofranchetti.gov.it"});
+                i.putExtra(Intent.EXTRA_SUBJECT, "Proposta di un articolo da *inserisci il tuo nome e classe*");
+                i.putExtra(Intent.EXTRA_TEXT   , "Salve, questa mail è stata generata dall'app del Giornalino d'Istituto, allego l'articolo che / argomento che vorrei fosse trattato in un prossimo articolo:");
+                try {
+                    startActivity(Intent.createChooser(i, "Scegli come inviarlo:"));
+                } catch (android.content.ActivityNotFoundException ex) {
+                    Toast.makeText(webb.this, "Non risulta esserci alcun client di email attualmente installato su questo dispositivo.", Toast.LENGTH_LONG).show();
+                }
             }
         });
-        progressDialog.dismiss();
+
     }
 }
 
